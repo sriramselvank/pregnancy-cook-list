@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pregnancy Cook List</title>
+<meta name="description" content="Daily cooking list and a varied weekly plan of pregnancy-safe, liver-free Tamil meals.">
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#f6f4ec" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#131814" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Cook List">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+  /* Layout: a big "cook today" checklist on top, an auto-generated varied week below */
+  :root{
+    --bg:#f6f4ec; --surface:#fffdf7; --ink:#1f2a24; --muted:#5e6b62; --line:#e2ddcf;
+    --leaf:#2f7d4b; --leaf-soft:#e4efe4; --berry:#b4552f; --berry-soft:#f6e3d8;
+    --gold:#9a7a1e; --gold-soft:#f3ead0;
+    --font-d:"Space Grotesk",system-ui,sans-serif; --font-b:"Inter",system-ui,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --bg:#131814; --surface:#1b2219; --ink:#eef1e8; --muted:#a6b1a3; --line:#2c3528;
+    --leaf:#78c48c; --leaf-soft:#223026; --berry:#e0906b; --berry-soft:#33231b;
+    --gold:#d8bd6a; --gold-soft:#302a16; color-scheme:dark;
+  }}
+  :root[data-theme="dark"]{
+    --bg:#131814; --surface:#1b2219; --ink:#eef1e8; --muted:#a6b1a3; --line:#2c3528;
+    --leaf:#78c48c; --leaf-soft:#223026; --berry:#e0906b; --berry-soft:#33231b;
+    --gold:#d8bd6a; --gold-soft:#302a16; color-scheme:dark;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-b);line-height:1.5;min-height:100vh;
+    -webkit-tap-highlight-color:transparent}
+  .wrap{max-width:1000px;margin:0 auto;
+    padding-left:max(16px,env(safe-area-inset-left,0px));
+    padding-right:max(16px,env(safe-area-inset-right,0px));
+    padding-top:max(22px,env(safe-area-inset-top,0px));
+    padding-bottom:max(56px,env(safe-area-inset-bottom,0px))}
+  h1,h2,h3{font-family:var(--font-d);text-wrap:balance;margin:0}
+  .eyebrow{font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--leaf);font-weight:600}
+  header h1{font-size:clamp(1.6rem,4.5vw,2.3rem);line-height:1.05;margin:.25rem 0 .4rem;letter-spacing:-.02em}
+  header p{color:var(--muted);margin:0;max-width:60ch}
+  .safebar{display:flex;gap:.5rem;align-items:flex-start;background:var(--gold-soft);
+    border:1px solid var(--line);border-radius:12px;padding:.7rem .9rem;margin:1.1rem 0 1.4rem;font-size:.84rem}
+  .safebar b{color:var(--gold)}
+  .btn{font:inherit;font-size:.84rem;font-weight:600;border-radius:10px;padding:.55rem .9rem;cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--ink)}
+  .btn.primary{background:var(--leaf);border-color:var(--leaf);color:#fff}
+  .btn:focus-visible{outline:2px solid var(--leaf);outline-offset:2px}
+  .btn:active{transform:translateY(1px)}
+
+  /* Cook today */
+  .today{background:var(--surface);border:1px solid var(--leaf);border-radius:18px;padding:18px 18px 20px;box-shadow:0 1px 0 var(--line)}
+  .today-head{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start;justify-content:space-between}
+  .today-head h2{font-size:clamp(1.15rem,3vw,1.5rem);margin:.15rem 0 .25rem}
+  .complement{font-size:.82rem;color:var(--muted);max-width:52ch;margin:0}
+  .complement b{color:var(--leaf)}
+  .cooklist{list-style:none;margin:1.1rem 0 0;padding:0;display:flex;flex-direction:column;gap:2px}
+  .cooklist li{display:grid;grid-template-columns:auto auto 1fr;gap:.6rem;align-items:start;padding:.65rem .3rem;border-top:1px solid var(--line)}
+  .cooklist li:first-child{border-top:0}
+  .cooklist input{width:22px;height:22px;margin-top:.1rem;accent-color:var(--leaf);cursor:pointer;flex:none}
+  .slotk{font-size:.63rem;letter-spacing:.07em;text-transform:uppercase;color:var(--leaf);font-weight:700;padding-top:.2rem;min-width:62px}
+  .dish{font-size:.98rem}
+  .dish.done{color:var(--muted);text-decoration:line-through}
+  .dish .note{display:block;font-size:.73rem;color:var(--gold);margin-top:.15rem;text-decoration:none}
+  .progress{font-size:.76rem;color:var(--muted);margin-top:.9rem}
+
+  /* Week */
+  .weekbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin:30px 0 14px}
+  .weekbar h2{font-size:1.15rem}
+  .actions{display:flex;flex-wrap:wrap;gap:8px}
+  .weekgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+  .daycard{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 12px 13px;min-width:0}
+  .daycard.is-today{border-color:var(--leaf);background:var(--leaf-soft)}
+  .daycard-head{display:flex;align-items:center;justify-content:space-between;gap:.4rem;margin-bottom:.5rem}
+  .daycard-head .dname{font-family:var(--font-d);font-weight:700;font-size:.9rem}
+  .daycard-head .theme{font-size:.6rem;text-transform:uppercase;letter-spacing:.05em;color:var(--leaf);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:.1rem .4rem}
+  .daycard.is-today .theme{background:#fff}
+  :root[data-theme="dark"] .daycard.is-today .theme{background:var(--surface)}
+  .mini{border:1px solid var(--line);background:var(--surface);border-radius:8px;font-size:.9rem;line-height:1;padding:.3rem .45rem;cursor:pointer;color:var(--ink)}
+  .mini:focus-visible{outline:2px solid var(--leaf);outline-offset:2px}
+  .daylist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.4rem}
+  .daylist li{font-size:.78rem;display:grid;grid-template-columns:20px 1fr;gap:.35rem;min-width:0}
+  .daylist .k{font-size:.58rem;font-weight:700;color:var(--muted);text-transform:uppercase;padding-top:.15rem}
+  .daymeta{display:flex;gap:.3rem;margin-top:.55rem;font-size:.7rem}
+  .dot{font-size:.9rem}
+  #weekexport{width:100%;min-height:150px;margin-top:12px;font-family:ui-monospace,Menlo,monospace;font-size:.78rem;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);white-space:pre;resize:vertical}
+  footer{margin-top:28px;font-size:.78rem;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Mrs. Sriram · Pregnancy kitchen</div>
+    <h1>What to cook today</h1>
+    <p>A ready cooking list for today, and a full week where each day is deliberately varied from the one before — different proteins, no repeated dishes. All pregnancy-safe, liver-free. Hit refresh anytime for a new set.</p>
+  </header>
+
+  <div class="safebar">
+    <span>🌿</span>
+    <div><b>Golden rule:</b> cook all egg, chicken and mutton fully (no runny yolk, no pink). Pasteurised paneer/tofu. Small pickle portions. General guidance, not medical advice.</div>
+  </div>
+
+  <section class="today">
+    <div class="today-head">
+      <div>
+        <div class="eyebrow">🍳 Cook today</div>
+        <h2 id="todayTitle">Today</h2>
+        <p class="complement" id="complement"></p>
+      </div>
+      <button class="btn primary" id="refreshToday">🔄 Refresh today's list</button>
+    </div>
+    <ul class="cooklist" id="cooklist"></ul>
+    <div class="progress" id="progress"></div>
+  </section>
+
+  <div class="weekbar">
+    <h2>This week’s plan</h2>
+    <div class="actions">
+      <button class="btn primary" id="genweek">✨ Generate fresh week</button>
+      <button class="btn" id="copyweek">📋 Copy week</button>
+    </div>
+  </div>
+  <div class="weekgrid" id="weekgrid"></div>
+  <textarea id="weekexport" hidden readonly aria-label="Week plan as text"></textarea>
+
+  <footer>Built from the Yashoda / Week&nbsp;1–2 Tamil meal charts. Plans save on this phone only. Today’s check-offs reset each morning.</footer>
+</div>
+
+<script>
+const N_EGG="Cook egg fully — firm yolk";
+const N_MUTTON="Rich red meat — enjoy, not daily";
+const N_PANEER="Use pasteurised paneer/tofu";
+const N_PICKLE="Keep pickle portion small (salt)";
+const N_MEAT="Cook through — no pink";
+
+const DATA={
+ Breakfast:[
+  ["Moong dal dosa + ginger chutney",["veg"]],["Idiyappam with coconut milk",["veg"]],
+  ["Avocado + carrot + boiled egg sandwich",["egg"],N_EGG],["Vegetable poha",["veg"]],
+  ["Multigrain dosa with sambar",["veg"]],["Chana salad",["veg","iron"]],
+  ["Ragi adai dosa + peanut chutney",["veg","iron"]],["Ragi dosa",["veg","iron"]],
+  ["Idiappam with egg sothy",["egg"],N_EGG],["Sweet potato salad",["veg"]],
+  ["Mixed fruit salad",["veg"]],["Idly with sambar",["veg"]],["Beetroot dosa",["veg","iron"]],
+  ["Karupu ulunthu kali",["veg","iron"]],["Dry-fruit smoothie with pomegranate",["veg"]],
+  ["Sesame + peanut laddu with fruits",["veg"]],["Kavuni rice kanji",["veg"]],
+  ["Bread + egg omelette, orange juice",["egg"],N_EGG],["Overnight oats with fruits",["veg"]],
+  ["2 egg dosai + ginger chutney",["egg"],N_EGG],["Green gram salad + apple juice",["veg","iron"]],
+  ["Mixed nuts smoothie + toast",["veg"]]
+ ],
+ Lunch:[
+  ["Drumstick sambar + rice + kovakai poriyal + egg",["egg","iron"],N_EGG],
+  ["Chicken curry + rice + carrot-beans fry + egg",["chicken","egg"],N_MEAT],
+  ["Chicken broth rice + channa masala + egg fry",["chicken","egg"],N_EGG],
+  ["Mutton biriyani + curd raita + egg",["mutton","egg"],N_MUTTON],
+  ["Rice + moringa thogayal + chicken fry",["chicken","iron"],N_MEAT],
+  ["Mutton bone broth rice + mutton curry + cucumber",["mutton"],N_MUTTON],
+  ["Chicken biriyani + egg + raita",["chicken","egg"],N_MEAT],
+  ["Rice keerai masiyal + boiled egg + carrot-beans",["egg","iron"],N_EGG],
+  ["Dhoor dal curry + ponnangani fry + egg omelette",["egg","iron"],N_EGG],
+  ["Methi paneer + rice + beetroot fry + boiled egg",["paneer","egg","iron"],N_PANEER],
+  ["Aviyal + rice + cauliflower roast + keerai fry",["veg","iron"]],
+  ["Rice + chow-chow kootu + moringa fry + cucumber",["veg","iron"]],
+  ["Rice + rasam + chicken fry + egg",["chicken","egg"],N_MEAT],
+  ["Parupu urundai curry + rice + keerai poriyal",["veg","iron"]],
+  ["Pudina rice + 2 boiled eggs + ladies finger fry",["egg"],N_EGG],
+  ["Rice + cauliflower curry + carrot-beans poriyal",["veg"]],
+  ["Rice + paneer peas masala",["paneer"],N_PANEER],
+  ["Rice + chicken curry + murungai keerai fry",["chicken","iron"],N_MEAT],
+  ["Coconut pulao with egg curry",["egg"],N_EGG],
+  ["Curd rice + mango pickle + chicken fry",["chicken"],N_PICKLE],
+  ["Rice + paneer curry + cucumber-onion salad",["paneer"],N_PANEER],
+  ["Rice + beetroot pachadi + chicken curry",["chicken","iron"],N_MEAT],
+  ["Rice + mutton chukka + cucumber salad",["mutton"],N_MUTTON],
+  ["Rice + sambar + ladies finger fry + egg",["egg"],N_EGG]
+ ],
+ Dinner:[
+  ["Beetroot chapathi with egg curry",["egg","iron"],N_EGG],["Chapathi with tofu / paneer",["paneer"],N_PANEER],
+  ["Sweet potato chapati + chicken curry",["chicken"],N_MEAT],["Stuffed mutton pittu",["mutton"],N_MUTTON],
+  ["Ginger chicken + chapathi",["chicken"],N_MEAT],["Beetroot mutton idly",["mutton","iron"],N_MUTTON],
+  ["Veggie soup with paneer fry",["paneer","veg"],N_PANEER],["Pittu with chicken curry",["chicken"],N_MEAT],
+  ["Karupu kavuni kanji",["veg"]],["Chicken sweet potato wrap",["chicken"],N_MEAT],
+  ["Veg mix ragi kali",["veg","iron"]],["Palak chapati + green gram curry",["veg","iron"]],
+  ["Beetroot chappathi",["veg","iron"]],["Ulunthu kali",["veg","iron"]],
+  ["Cucumber masala rotti + potato curry",["veg"]],["Beetroot poori + vegetable kuruma",["veg","iron"]],
+  ["Broccoli rice",["veg"]],["Veg poha",["veg"]],["Multigrain dosa + peanut chutney",["veg"]],
+  ["Ragi idly with sambar",["veg","iron"]],["Rotti with dhoor dal curry",["veg"]],
+  ["Chicken & vegetable pasta",["chicken"],N_MEAT],["Spinach oat flatbread + chicken curry",["chicken","iron"],N_MEAT],
+  ["Chapathi + paneer pepper masala",["paneer"],N_PANEER],["Masoor dal dosa with egg curry",["egg"],N_EGG],
+  ["Mutton paya with string hoppers",["mutton"],N_MUTTON]
+ ],
+ "Soup / Salad":[
+  ["Paneer salad",["paneer"],N_PANEER],["Chicken soup",["chicken"],N_MEAT],["Soya chunk salad",["veg"]],
+  ["Sprouted green gram + chicken salad",["chicken","iron"],N_MEAT],["Lemon chicken soup",["chicken"],N_MEAT],
+  ["Broccoli soup",["veg"]],["Ragi veg soup",["veg","iron"]],["Corn soup",["veg"]],
+  ["Moringa soup",["veg","iron"]],["Lentil soup",["veg","iron"]],["Chicken & corn soup",["chicken"],N_MEAT],
+  ["Green gram salad",["veg","iron"]],["Chana egg salad",["egg"],N_EGG],["Mixed fruit salad",["veg"]]
+ ],
+ "Snack / Drink":[
+  ["Mixed fruit bowl",["snack"]],["Orange juice",["snack"]],["Pomegranate juice",["snack","iron"]],
+  ["Boiled carrots & beetroots",["snack","iron"]],["Lemon juice + peanut balls",["snack"]],
+  ["Green apple juice",["snack"]],["Sesame + peanut laddu",["snack"]],["Dry-fruit smoothie",["snack"]],
+  ["Mixed nuts smoothie",["snack"]]
+ ]
+};
+const SLOTS=Object.keys(DATA);
+const DAYFULL=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+const DAYSHORT=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+const CATLABEL={chicken:"chicken",mutton:"mutton",paneer:"paneer",egg:"egg",veg:"plant-based"};
+const todayIdx=(new Date().getDay()+6)%7;
+
+function catOf(it){const t=it[1];for(const c of ["mutton","chicken","paneer","egg"])if(t.includes(c))return c;return "veg";}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function makeThemes(){
+  const base=["chicken","chicken","veg","veg","paneer","egg","mutton"];
+  for(let t=0;t<300;t++){const a=shuffle(base.slice());let ok=true;
+    for(let i=1;i<a.length;i++)if(a[i]===a[i-1]){ok=false;break;}
+    if(ok)return a;}
+  return base;
+}
+function pick(slot,pred,prev,recent){
+  const all=DATA[slot].map((_,i)=>i);
+  const prevI=prev?prev[slot]:null;
+  let pool=all.filter(i=>pred(DATA[slot][i])&&i!==prevI&&!recent[slot].has(i));
+  if(!pool.length)pool=all.filter(i=>pred(DATA[slot][i])&&i!==prevI);
+  if(!pool.length)pool=all.filter(i=>i!==prevI);
+  if(!pool.length)pool=all;
+  const choice=pool[Math.floor(Math.random()*pool.length)];
+  recent[slot].add(choice);
+  if(recent[slot].size>3)recent[slot].delete(recent[slot].values().next().value);
+  return choice;
+}
+function hasIron(day){return SLOTS.some(s=>{const i=day[s];return i!=null&&DATA[s][i][1].includes("iron");});}
+function ensureIron(day,prev){
+  if(hasIron(day))return;
+  for(const slot of ["Soup / Salad","Breakfast","Dinner"]){
+    const cand=DATA[slot].map((_,i)=>i).filter(i=>DATA[slot][i][1].includes("iron")&&i!==(prev?prev[slot]:null));
+    if(cand.length){day[slot]=cand[Math.floor(Math.random()*cand.length)];return;}
+  }
+}
+function genDay(theme,prev,recent){
+  const day={_theme:theme};
+  day.Lunch=pick("Lunch",it=>catOf(it)===theme,prev,recent);
+  const dinCats=["veg","egg","paneer","chicken"].filter(c=>c!==theme);
+  day.Dinner=pick("Dinner",it=>dinCats.includes(catOf(it)),prev,recent);
+  day.Breakfast=pick("Breakfast",()=>true,prev,recent);
+  day["Soup / Salad"]=pick("Soup / Salad",()=>true,prev,recent);
+  day["Snack / Drink"]=pick("Snack / Drink",()=>true,prev,recent);
+  ensureIron(day,prev);
+  return day;
+}
+function generateWeek(){
+  const themes=makeThemes();
+  const recent={};SLOTS.forEach(s=>recent[s]=new Set());
+  const days=[];let prev=null;
+  for(let d=0;d<7;d++){const day=genDay(themes[d],prev,recent);days.push(day);prev=day;}
+  return days;
+}
+function refreshDay(i){
+  const prev=i>0?weekDays[i-1]:null;
+  const avoid=prev?prev._theme:null;
+  const opts=["chicken","veg","paneer","egg","mutton"].filter(c=>c!==avoid);
+  const theme=opts[Math.floor(Math.random()*opts.length)];
+  const recent={};SLOTS.forEach(s=>{recent[s]=new Set();if(prev&&prev[s]!=null)recent[s].add(prev[s]);});
+  weekDays[i]=genDay(theme,prev,recent);
+  saveWeek();renderAll();
+}
+
+const WKEY="preg-cooklist-week-v1";
+const CKEY="preg-cooklist-checks-v1";
+let weekDays=null, checks={date:todayStr(),done:{}};
+function todayStr(){const d=new Date();return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();}
+function saveWeek(){try{localStorage.setItem(WKEY,JSON.stringify(weekDays))}catch(e){}}
+function saveChecks(){try{localStorage.setItem(CKEY,JSON.stringify(checks))}catch(e){}}
+try{weekDays=JSON.parse(localStorage.getItem(WKEY))||null}catch(e){}
+try{const c=JSON.parse(localStorage.getItem(CKEY));if(c&&c.date===todayStr())checks=c;}catch(e){}
+if(!Array.isArray(weekDays)||weekDays.length!==7)weekDays=generateWeek();
+
+function renderToday(){
+  const day=weekDays[todayIdx];
+  document.getElementById("todayTitle").textContent=DAYFULL[todayIdx]+" · "+new Date().toLocaleDateString(undefined,{month:"short",day:"numeric"});
+  const comp=document.getElementById("complement");
+  if(todayIdx===0){comp.innerHTML="A balanced plate to open the week.";}
+  else{const y=weekDays[todayIdx-1];
+    comp.innerHTML=`Varied from yesterday (${DAYFULL[todayIdx-1]}, which leaned <b>${CATLABEL[y._theme]}</b>): today is <b>${CATLABEL[day._theme]}</b>.`;}
+  const list=document.getElementById("cooklist");list.innerHTML="";
+  SLOTS.forEach(slot=>{
+    const it=DATA[slot][day[slot]];
+    const li=document.createElement("li");
+    const id="chk-"+slot.replace(/\W/g,"");
+    const done=!!checks.done[slot];
+    li.innerHTML=`<input type="checkbox" id="${id}" ${done?"checked":""}>
+      <span class="slotk">${slot.split(" ")[0]}</span>
+      <label for="${id}" class="dish${done?" done":""}">${it[0]}${it[2]?`<span class="note">⚠ ${it[2]}</span>`:""}</label>`;
+    li.querySelector("input").addEventListener("change",e=>{
+      checks.done[slot]=e.target.checked;saveChecks();
+      li.querySelector(".dish").classList.toggle("done",e.target.checked);
+      updateProgress();
+    });
+    list.appendChild(li);
+  });
+  updateProgress();
+}
+function updateProgress(){
+  const n=SLOTS.filter(s=>checks.done[s]).length;
+  document.getElementById("progress").textContent=n===SLOTS.length?"All done for today 🎉":`${n} of ${SLOTS.length} cooked`;
+}
+function renderWeek(){
+  const grid=document.getElementById("weekgrid");grid.innerHTML="";
+  weekDays.forEach((day,i)=>{
+    const card=document.createElement("div");
+    card.className="daycard"+(i===todayIdx?" is-today":"");
+    let lis="";
+    SLOTS.forEach(slot=>{const it=DATA[slot][day[slot]];lis+=`<li><span class="k">${slot[0]}</span><span>${it[0]}</span></li>`;});
+    let iron=hasIron(day), mutton=SLOTS.some(s=>DATA[s][day[s]][1].includes("mutton"));
+    card.innerHTML=`<div class="daycard-head"><span class="dname">${DAYSHORT[i]}${i===todayIdx?" · today":""}</span>
+        <button class="mini" data-day="${i}" title="Refresh ${DAYFULL[i]}" aria-label="Refresh ${DAYFULL[i]}">🔄</button></div>
+      <span class="theme">${CATLABEL[day._theme]}</span>
+      <ul class="daylist" style="margin-top:.5rem">${lis}</ul>
+      <div class="daymeta">${iron?'<span class="dot" title="iron-rich">🌿</span>':""}${mutton?'<span class="dot" title="red meat">🥩</span>':""}</div>`;
+    card.querySelector(".mini").addEventListener("click",()=>refreshDay(i));
+    grid.appendChild(card);
+  });
+}
+function renderAll(){renderToday();renderWeek();}
+
+document.getElementById("refreshToday").addEventListener("click",()=>{
+  refreshDay(todayIdx);
+  checks.done={};saveChecks();renderToday();
+});
+document.getElementById("genweek").addEventListener("click",()=>{
+  weekDays=generateWeek();saveWeek();
+  checks.done={};saveChecks();renderAll();
+});
+function weekText(){
+  const lines=["Weekly Pregnancy Cook Plan","(liver-free · varied daily · pregnancy-safe)",""];
+  weekDays.forEach((day,i)=>{
+    lines.push(DAYFULL[i].toUpperCase()+(i===todayIdx?"  <- today":""));
+    SLOTS.forEach(slot=>lines.push("  "+slot+": "+DATA[slot][day[slot]][0]));
+    lines.push("");
+  });
+  lines.push("Reminders: cook egg/chicken/mutton fully · pasteurised paneer · small pickle portions.");
+  return lines.join("\n");
+}
+function flash(msg){const el=document.getElementById("progress");el.textContent=msg;setTimeout(()=>updateProgress(),2600);}
+document.getElementById("copyweek").addEventListener("click",()=>{
+  const txt=weekText();const area=document.getElementById("weekexport");
+  const fb=()=>{area.hidden=false;area.value=txt;area.focus();area.select();flash("Select all above & press Copy");};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(()=>flash("Week copied ✓")).catch(fb);}else fb();
+});
+
+saveWeek();renderAll();
+
+// Register service worker for offline use
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>{navigator.serviceWorker.register("service-worker.js").catch(()=>{});});
+}
+</script>
+</body>
+</html>
